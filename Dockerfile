@@ -106,7 +106,7 @@ COPY --chown=${UID}:${GID} . .
 RUN composer dump-autoload --no-scripts --no-dev --optimize
 
 # Build frontend assets
-RUN npm ci --only=production && npm run build
+RUN npm ci && npm run build
 
 # Entrypoint
 ENTRYPOINT [ "/usr/local/bin/entrypoint.sh" ]
