@@ -56,7 +56,9 @@ RUN apk add --update --no-cache \
     # Runtime dependencies
     php84-session php84-openssl \
     # Nginx and PHP FPM to serve over HTTP
-    php84-fpm nginx
+    php84-fpm nginx \
+    # Node.js for building frontend assets
+    nodejs npm
 
 # PHP FPM configuration
 # Change username and ownership in php-fpm pool config
@@ -102,6 +104,9 @@ COPY --from=vendor --chown=${UID}:${GID} /srv/vendor /srv/vendor
 # Copy the rest of the code
 COPY --chown=${UID}:${GID} . .
 RUN composer dump-autoload --no-scripts --no-dev --optimize
+
+# Build frontend assets
+RUN npm ci --only=production && npm run build
 
 # Entrypoint
 ENTRYPOINT [ "/usr/local/bin/entrypoint.sh" ]
