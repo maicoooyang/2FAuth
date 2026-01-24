@@ -1,7 +1,7 @@
 name: ci-docker-publish-dev
 on:
   push:
-    branches:    
+    branches:
       - dev
     paths:
       - .github/workflows/ci-docker-publish-dev.yml
@@ -23,7 +23,7 @@ on:
       - Dockerfile
       - phpunit.xml
   pull_request:
-    branches:    
+    branches:
       - dev
     paths:
       - .github/workflows/ci-docker-publish-dev.yml
@@ -62,8 +62,9 @@ jobs:
 
       - uses: docker/login-action@v3
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set variables
         id: set_vars
@@ -74,7 +75,7 @@ jobs:
           echo "created=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> $GITHUB_OUTPUT
           echo "platforms=linux/amd64,linux/386" >> $GITHUB_OUTPUT
 
-      - name: Build and push to docker Hub
+      - name: Build and push to GitHub Container Registry
         uses: docker/build-push-action@v6
         with:
           platforms: ${{ steps.set_vars.outputs.platforms }}
@@ -83,5 +84,5 @@ jobs:
             COMMIT=${{ steps.set_vars.outputs.commit }}
             VERSION=dev
           tags: |
-            2fauth/2fauth:dev
+            ghcr.io/${{ github.repository }}:dev
           push: true
