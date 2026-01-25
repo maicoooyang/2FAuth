@@ -60,10 +60,8 @@ jobs:
             ghcr.io/${{ steps.set_vars.outputs.repository }}:latest
           push: true
 
-      - name: Clean up artifacts
-        run: |
-          # Clean up Docker build cache
-          docker system prune -f
-          # Clean up workspace
-          rm -rf ${{ github.workspace }}/node_modules
-          rm -rf ${{ github.workspace }}/.npm
+      - name: Delete workflow artifacts
+        uses: geekyeggo/delete-artifact@v5
+        with:
+          name: "*"
+          failOnError: false

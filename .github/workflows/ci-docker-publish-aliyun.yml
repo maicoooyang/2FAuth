@@ -21,6 +21,11 @@ jobs:
           username: ${{ secrets.ALIYUN_USERNAME }}
           password: ${{ secrets.ALIYUN_PASSWORD }}
 
+      - name: Set date tag
+        id: set_date_tag
+        run: |
+          echo "date_tag=$(date +%Y%m%d)" >> $GITHUB_OUTPUT
+
       - name: Set variables
         id: set_vars
         env:
@@ -30,22 +35,32 @@ jobs:
           echo "created=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> $GITHUB_OUTPUT
           echo "platforms=linux/amd64,linux/386" >> $GITHUB_OUTPUT
 
-      - name: Build and push to Aliyun Container Registry
+      - name: Build and push to Aliyun Container Registry with date tag
         uses: docker/build-push-action@v6
         with:
           platforms: ${{ steps.set_vars.outputs.platforms }}
           build-args: |
             CREATED=${{ steps.set_vars.outputs.created }}
             COMMIT=${{ steps.set_vars.outputs.commit }}
-            VERSION=master
+            VERSION=${{ steps.set_date_tag.outputs.date_tag }}
           tags: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:master
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.set_date_tag.outputs.date_tag }}
           push: true
 
-      - name: Clean up artifacts
-        run: |
-          # Clean up Docker build cache
-          docker system prune -f
-          # Clean up workspace
-          rm -rf ${{ github.workspace }}/node_modules
-          rm -rf ${{ github.workspace }}/.npm
+      - name: Build and push to Aliyun Container Registry with latest tag
+        uses: docker/build-push-action@v6
+        with:
+          platforms: ${{ steps.set_vars.outputs.platforms }}
+          build-args: |
+            CREATED=${{ steps.set_vars.outputs.created }}
+            COMMIT=${{ steps.set_vars.outputs.commit }}
+            VERSION=latest
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+          push: true
+
+      - name: Delete workflow artifacts
+        uses: geekyeggo/delete-artifact@v5
+        with:
+          name: "*"
+          failOnError: false
