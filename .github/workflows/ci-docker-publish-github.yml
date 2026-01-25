@@ -1,7 +1,9 @@
-name: ci-docker-publish-release
+name: ci-docker-publish-github
 on:
-  release:
-    types: [published]
+  push:
+    branches:
+      - main
+  workflow_dispatch:
 
 jobs:
   publish:
@@ -11,8 +13,6 @@ jobs:
       packages: write
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.release.tag_name }}
 
       - uses: docker/setup-qemu-action@v3
       - uses: docker/setup-buildx-action@v3
@@ -23,42 +23,31 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Set tags
-        uses: actions/github-script@v7
-        id: set_tags
-        with:
-          # context.ref: For workflows triggered by release, this is the release tag created.
-          # A release tag is fully-formed as refs/tags/<tag_name> so we remove the 10 first
-          # characters to drop the 'refs/tags/' part.
-          script: |
-            const tag = context.ref.substring(10)
-            const version = tag.replace('v', '')
-            core.setOutput('version', version)
+      - name: Set date tag
+        id: set_date_tag
+        run: |
+          echo "date_tag=$(date +%Y%m%d)" >> $GITHUB_OUTPUT
 
       - name: Set variables
         id: set_vars
-        env:
-          EVENT_NAME: ${{ github.event_name }}
         run: |
           echo "commit=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
           echo "created=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> $GITHUB_OUTPUT
           echo "platforms=linux/amd64,linux/386,linux/arm64,linux/arm/v6,linux/arm/v7" >> $GITHUB_OUTPUT
 
-      - name: Build and push to GitHub Container Registry with version as unique tag
+      - name: Build and push to GitHub Container Registry with date tag
         uses: docker/build-push-action@v6
         with:
           platforms: ${{ steps.set_vars.outputs.platforms }}
           build-args: |
             CREATED=${{ steps.set_vars.outputs.created }}
             COMMIT=${{ steps.set_vars.outputs.commit }}
-            VERSION=${{ steps.set_tags.outputs.version }}
+            VERSION=${{ steps.set_date_tag.outputs.date_tag }}
           tags: |
-            ghcr.io/${{ github.repository }}:${{ steps.set_tags.outputs.version }}
+            ghcr.io/${{ github.repository }}:${{ steps.set_date_tag.outputs.date_tag }}
           push: true
 
-      - name: Build and push to GitHub Container Registry with stable tag latest
-        # We do not want to publish a prerelease as the 'latest' image
-        if: ${{ github.event.release.prerelease == false }}
+      - name: Build and push to GitHub Container Registry with latest tag
         uses: docker/build-push-action@v6
         with:
           platforms: ${{ steps.set_vars.outputs.platforms }}
