@@ -34,6 +34,7 @@ jobs:
           echo "commit=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
           echo "created=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> $GITHUB_OUTPUT
           echo "platforms=linux/amd64,linux/386,linux/arm64,linux/arm/v6,linux/arm/v7" >> $GITHUB_OUTPUT
+          echo "repository=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
 
       - name: Build and push to GitHub Container Registry with date tag
         uses: docker/build-push-action@v6
@@ -44,7 +45,7 @@ jobs:
             COMMIT=${{ steps.set_vars.outputs.commit }}
             VERSION=${{ steps.set_date_tag.outputs.date_tag }}
           tags: |
-            ghcr.io/${{ toLower(github.repository) }}:${{ steps.set_date_tag.outputs.date_tag }}
+            ghcr.io/${{ steps.set_vars.outputs.repository }}:${{ steps.set_date_tag.outputs.date_tag }}
           push: true
 
       - name: Build and push to GitHub Container Registry with latest tag
@@ -56,7 +57,7 @@ jobs:
             COMMIT=${{ steps.set_vars.outputs.commit }}
             VERSION=latest
           tags: |
-            ghcr.io/${{ toLower(github.repository) }}:latest
+            ghcr.io/${{ steps.set_vars.outputs.repository }}:latest
           push: true
 
       - name: Clean up artifacts
