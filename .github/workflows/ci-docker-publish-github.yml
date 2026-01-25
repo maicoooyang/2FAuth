@@ -44,7 +44,7 @@ jobs:
             COMMIT=${{ steps.set_vars.outputs.commit }}
             VERSION=${{ steps.set_date_tag.outputs.date_tag }}
           tags: |
-            ghcr.io/${{ github.repository | lower }}:${{ steps.set_date_tag.outputs.date_tag }}
+            ghcr.io/${{ toLower(github.repository) }}:${{ steps.set_date_tag.outputs.date_tag }}
           push: true
 
       - name: Build and push to GitHub Container Registry with latest tag
@@ -56,7 +56,7 @@ jobs:
             COMMIT=${{ steps.set_vars.outputs.commit }}
             VERSION=latest
           tags: |
-            ghcr.io/${{ github.repository | lower }}:latest
+            ghcr.io/${{ toLower(github.repository) }}:latest
           push: true
 
       - name: Clean up artifacts
