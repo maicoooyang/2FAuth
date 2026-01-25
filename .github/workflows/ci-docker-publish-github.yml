@@ -58,3 +58,11 @@ jobs:
           tags: |
             ghcr.io/${{ github.repository }}:latest
           push: true
+
+      - name: Clean up artifacts
+        run: |
+          # Clean up Docker build cache
+          docker system prune -f
+          # Clean up workspace
+          rm -rf ${{ github.workspace }}/node_modules
+          rm -rf ${{ github.workspace }}/.npm
