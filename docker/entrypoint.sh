@@ -108,7 +108,8 @@ if [ -f /2fauth/installed ]; then
     php artisan migrate --force
   fi
 else
-  php artisan migrate:fresh --force
+  echo "First installation detected, running migrations..."
+  php artisan migrate --force
   php artisan passport:install --no-interaction
 fi
 
